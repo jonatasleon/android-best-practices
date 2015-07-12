@@ -10,7 +10,7 @@ Lições aprendidas por desenvolvedores Android na [Futurice](http://www.futuric
 #### Mantenha senhas e dados sensíveis no gradle.properties
 #### Não escreva seu próprio HTTP client, use as bibliotecas Volley ou OkHttp
 #### Use a biblioteca Jackson para análise de dados JSON
-#### Evite usar o Guava e use apenas algumas bibliotecas devido ao *limite de métodos de 65k*
+#### Evite usar o Guava e utilize apenas algumas bibliotecas devido ao *limite de métodos em 65k*
 #### Use Fragments para representar uma tela de UI
 #### Use Activities só para gerenciar Fragments
 #### Layouts XML são códigos, organize-os bem

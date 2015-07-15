@@ -87,3 +87,71 @@ new-structure
 A principal diferença é que a nova estrutura separa explicitamente 'grupos de código fonte' (`main`, `androidTest`), um conceito do Gradle. Você poderia, por exemplo, adicionar grupos de código fonte 'pago' e 'free' dentro de `src` que terá o código fonte de seu aplicativo nas distruições paga e gratuita.
 
 Tem um `app` em alto nível é útil para distinguir seu aplicativo de outros projetos de biblioteca (ex.: `library-foobar`) que serão referenciado no seu aplicativo. Então o `settings.gradle` mantém referências a estes projetos de biblioteca, que podem referenciar a `app/build.gradle`.
+
+### Configuração do Gradle
+
+**Estrutura Geral.** Siga [Guia da Google sobre Gradle para Android](http://tools.android.com/tech-docs/new-build-system/user-guide)
+
+**Tarefas Pequenas.*** Ao invés de usar scripts (shell, Python, Perl etc), você pode realizar tarefas no Gradle. Para mais detalhes, siga a [documentação do Gradle](http://www.gradle.org/docs/current/userguide/userguide_single.html#N10CBF).
+
+**Senhas.** No `build.gradle` do seu app você precisará definir as `signingConfigs` para lançar uma build. Aqui está o que você deve evitar:
+
+_Não faça isso_. Dessa forma apareceria no sistema de controle de versão.
+
+```groovy
+signingConfigs {
+    release {
+        storeFile file("myapp.keystore")
+        storePassword "password123"
+        keyAlias "thekey"
+        keyPassword "password789"
+    }
+}
+```
+
+Ao invés disso, crie um arquivo `gradle.properties` que _não_ deve ser adicionado ao sistema de controle de versão:
+
+```
+KEYSTORE_PASSWORD=password123
+KEY_PASSWORD=password789
+```
+
+Esse arquivo é automaticamente importado pelo gradle, então você pode usa-lo no `build.gradle`dessa forma:
+
+ ```groovy
+ signingConfigs {
+     release {
+         try {
+             storeFile file("myapp.keystore")
+             storePassword KEYSTORE_PASSWORD
+             keyAlias "thekey"
+             keyPassword KEY_PASSWORD
+         }
+         catch (ex) {
+             throw new InvalidUserDataException("You should define KEYSTORE_PASSWORD and KEY_PASSWORD in gradle.properties.")
+         }
+     }
+ }
+ ```
+
+**Prefira o Maven para solução de dependências ao invés de importar arquivos jar.** Se você explicitamente incluir arquivos jar no seu projeto, eles estarão congelados em alguma versão específica, tal como `2.1.1`. Fazer o download de jars e atualiza-los é um processo complicado, esse é um problema que o Maven se propôe a resolver e também é encorajado na criação do Android Gradle. Por exemplo:
+
+```groovy
+dependencies {
+    compile 'com.squareup.okhttp:okhttp:2.2.0'
+    compile 'com.squareup.okhttp:okhttp-urlconnection:2.2.0'
+}
+```
+
+**Evite a solução de depencências dinâmicas do Maven**
+Evite o uso de versionamento dinâmico, como `2.1.+`, pois isso pode resultar em builds instáveis ou sutilmente diferentes, diferenças não monitoradas no comportamento entre as builds. A utilização de versões estáticas, como `2.1.1` ajuda a criar um ambiente de desenvolvimento mais estável, previsível e repetitivo.
+
+### IDEs e editores de texto
+
+**Use qualquer editor de texto, mas ele deve ser agradável com a estrutura do projeto.** Editores de texto são uma escolha pessoal e é sua responsabilidade deixar seus editor funcionando de acordo com a estrutura do projeto e sistema de build.
+
+O IDE mais recomendado atualmente é o Android Studio, por ser desenvolvido pela Google, está intímo com o Gradle, usa a nova estrutura de projeto por padrãoe, finalmente está em uma versão estável e é adaptador para desenvolvimento Android.
+
+Você pode usar o [Eclipse ADT](https://developer.android.com/sdk/installing/index.html?pkg=adt) se desejar, mas você terá de configurá-lo, já que ele espera a antiga estrutura de projetos e o Ant para building. Você pode até usar um editor de texto plano, como o Vim, Sublime Text or Emacs. Nesse caso você deverá usar o Gradle e o `adb` por linha de comando. Se a integração do Eclipse com o Gradle não está funcionando para você, suas opções são usar a linha de comando somente para build ou migrar para o Android Studio. Essa é a melhor opção devido a recente depreciação do plugin ADT.
+
+Qualquer um que você utilize basta ter certeza que o Gradle e a nova estrutura de projeto permanecem como a maneira oficial de construir a aplicação e evite adicionar ao sistema de controle de versão arquivos de configuração do seu editor em específico. Por exemplo, não adicione o arquivo do Ant, `build.xml`. Especialmente não se esqueça de manter o `build.gradle` atualizado e funcional se você estiver mudando as configurações de build no Ant. Também seja gentil com outros desenvolvedores, não force-os a mudar suas ferramentas de preferência.

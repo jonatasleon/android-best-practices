@@ -22,6 +22,7 @@ Lições aprendidas por desenvolvedores Android na [Futurice](http://www.futuric
 #### Evite processamento client-side para WebViews, e cuidado com vazamento de dados
 #### Use Robolectric para unit tests, Robotium para connected (UI) tests
 #### Use Genymotion como seu emulador
+#### Sempre use ProGuard ou DexGuard
 
 
 ----------

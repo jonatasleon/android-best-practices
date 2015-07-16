@@ -155,3 +155,46 @@ O IDE mais recomendado atualmente é o Android Studio, por ser desenvolvido pela
 Você pode usar o [Eclipse ADT](https://developer.android.com/sdk/installing/index.html?pkg=adt) se desejar, mas você terá de configurá-lo, já que ele espera a antiga estrutura de projetos e o Ant para building. Você pode até usar um editor de texto plano, como o Vim, Sublime Text or Emacs. Nesse caso você deverá usar o Gradle e o `adb` por linha de comando. Se a integração do Eclipse com o Gradle não está funcionando para você, suas opções são usar a linha de comando somente para build ou migrar para o Android Studio. Essa é a melhor opção devido a recente depreciação do plugin ADT.
 
 Qualquer um que você utilize basta ter certeza que o Gradle e a nova estrutura de projeto permanecem como a maneira oficial de construir a aplicação e evite adicionar ao sistema de controle de versão arquivos de configuração do seu editor em específico. Por exemplo, não adicione o arquivo do Ant, `build.xml`. Especialmente não se esqueça de manter o `build.gradle` atualizado e funcional se você estiver mudando as configurações de build no Ant. Também seja gentil com outros desenvolvedores, não force-os a mudar suas ferramentas de preferência.
+
+### Bibliotecas
+
+**[Jackson](http://wiki.fasterxml.com/JacksonHome)** é uma biblioteca Java para converter Objetos em JSON e vice-versa.[Gson](https://code.google.com/p/google-gson/) é uma escolha comum para resolver esse problema, de qualquer formas nós pensamos que a Jackson seja mais performático, desde que ele suporta maneiras alternativas de processar JSON: streaming, modelo de árvore em memória e a tradicional associação de dados JSON-POJO. Tendo em mente que, embora, a Jackson seja uma biblioteca mais ampla do que a GSON, dependendo do seu caso, você pode preferir GSON para assim evitar a limitação de 65 mil métodos. Outras alternativas: [Json-smart](https://code.google.com/p/json-smart/) e [Boon JSON](https://github.com/RichardHightower/boon/wiki/Boon-JSON-in-five-minutes)
+
+**Network, caching e imagens.** Existem pares de soluções comprovadas para realização de requesições para servidores que você deve considerar usar para implementação de seu próprio client. Use [Volley](https://android.googlesource.com/platform/frameworks/volley) ou [Retrofit](http://square.github.io/retrofit/). Volley também fornece helpers para carregar e fazer cache de imagens. Se você optar por usar Retrofit, considere a lib [Picasso](http://square.github.io/picasso/) para carregamento e cache de imagens, e para requisições HTTP eficientes veja [OkHttp](http://square.github.io/okhttp/). Todas as três libs, Retrofit, Picasso e OkHttp, foram desenvolvidas pela mesma companhia, então elas se complementam muito bem entre sí. [OkHttp também pode ser usado junto com a  Volley](http://stackoverflow.com/questions/24375043/how-to-implement-android-volley-with-okhttp-2-0/24951835#24951835).
+
+**RxJava** é uma biblioteca para Programação Reativa, em outras palavras, manipulação de eventos assíncronos. Esse é um poderoso e promissor paradigma, que também pode ser confuso já que ele é tão diferente. Nós recomendamos tomar algum cuidado antes de usar essa biblioteca para arquitetar as entidades da aplicação. Existem alguns projetos feitos por nós usando RxJava, se você precisar de ajuda, fale com uma dessas pessoas: Timo Tuominen, Olli Salonen, Andre Medeiros, Mark Voit, Antti Lammi, Vera Izrailit, Juha Ristolainen. Nós escrevemos algumas postagens no blog sobre isso:  [[1]](http://blog.futurice.com/tech-pick-of-the-week-rx-for-net-and-rxjava-for-android), [[2]](http://blog.futurice.com/top-7-tips-for-rxjava-on-android), [[3]](https://gist.github.com/staltz/868e7e9bc2a7b8c1f754), [[4]](http://blog.futurice.com/android-development-has-its-own-swift).
+
+Se você tiver nenhuma préva experiência com Rx, comece aplicando-o apenas para respostas da API. Como alternativa, comece usando-o para manipulação de simples eventos de interface de usuário, como eventos de clique ou digitação em um campo de busca. Se você está confiante em suas habilidades em Rx e quer aplica-las em uma arquitetura mais completa, então escravas Javadocs sobre todas as partes complicadas. Tenha em mente que outros programadores não familiarizados com RxJava podem levar muito tempo fazendo a manutenção do projeto. Faça seu melhor para ajuda-los a entender seu código e também o Rx.
+
+**[Retrolambda](https://github.com/evant/gradle-retrolambda)** é uma biblioteca Java para uso da sintaxe de expressões Lambda no Android e em outras plataformas pré-JDK8. Ela ajuda a manter seus código compacto e legível, especialmente se você usa um estilo funcional como por exemplo RxJava. Para usa-la, instale o JDK8, defina-o como seu SDK local nas opções de Estrutura de Projeto, defina `JAVA8_HOME` e `JAVA7_HOME` como variavéis de ambiente, então no build.gradle na raiz projeto defina:
+
+```groovy
+dependencies {
+    classpath 'me.tatarka:gradle-retrolambda:2.4.1'
+}
+```
+
+e no build.gradle de cada módulo adicione:
+
+```groovy
+apply plugin: 'retrolambda'
+
+android {
+    compileOptions {
+    sourceCompatibility JavaVersion.VERSION_1_8
+    targetCompatibility JavaVersion.VERSION_1_8
+}
+
+retrolambda {
+    jdk System.getenv("JAVA8_HOME")
+    oldJdk System.getenv("JAVA7_HOME")
+    javaVersion JavaVersion.VERSION_1_7
+}
+```
+
+O Android Studio oferece suporte para lambdas do Java8. Se você é novo em lambdas, basta seguir o _get started_ a seguir:
+
+- Qualquer interface com apenas um método é _"lambda friendly"_ e pode ser envolvido dentro de uma sintaxe mais compacta
+- Se você está em dúvida sobre os parâmetros e como escrever uma sub-classe anônima, então deixe que o Android Studio envolva-o em um lambda para você.
+
+**Tenha cuidado com a limitação de métodos pelo dex e evite usar váris bibliotecas.** Aplicações Android quando empacotadas como um arquivo dex têm uma forte limitação de 65536 métodos que podem ser referenciados [[1]](https://medium.com/@rotxed/dex-skys-the-limit-no-65k-methods-is-28e6cb40cf71) [[2]](http://blog.persistent.info/2014/05/per-package-method-counts-for-androids.html) [[3]](http://jakewharton.com/play-services-is-a-monolith/). Você irá ver um erro fatal durante a compilação se você ultrapassar o limite. Por essa razão, use uma mínima quantidade de bibliotecas e use a ferramenta [dex-method-counts](https://github.com/mihaip/dex-method-counts) para determinar quais conjuntos de bibliotecas pode ser utilizadas a fim de permanecer abaixo do limite. Evite especialmente usar a biblioteca Guava, já que ela contém mais de 13 mil métodos.

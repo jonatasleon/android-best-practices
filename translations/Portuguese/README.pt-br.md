@@ -23,6 +23,7 @@ Lições aprendidas por desenvolvedores Android na [Futurice](http://www.futuric
 #### Use Robolectric para unit tests, Robotium para connected (UI) tests
 #### Use Genymotion como seu emulador
 #### Sempre use ProGuard ou DexGuard
+#### Use SharedPreference para peristência simples, caso contrário use ContentProvider
 
 
 ----------
@@ -208,3 +209,29 @@ Pelo histórico da API Android, você vagamente relacionar Fragments como peças
 - Evite usar extensivamente o [aninhamento de fragments](https://developer.android.com/about/versions/android-4.2.html#NestedFragments), porque [bugs de matryoshka](http://delyan.me/android-s-matryoshka-problem/) podem ocorrer. Use fragments aninhados somente quando fizer sentido(por exemplo, fragments e um ViewPager de deslizamento horizontal ao invés de fragments como uma tela) ou se for uma decisão bem tomada.
 - Evite colocar muito código em activities. Sempre que possível, mantenha-os como containers leves, existindo no ciclo de vida principal de sua aplicação e outras interfaces importantes da API do Android. Prefira activities com um único fragment ao invés apenas activities sem nenhum fragment - coloque o código de interface de usuário no fragment da activity. Isso o torna reusável no caso de você precisar altera-lo para dentro de um layout de tabs ou em uma tela para tablets(contendo vários fragments). Evite ter uma activity sem um fragment correspondente, a não ser que seja uma decisão bem tomada.
 - Não abuse das APIs a nível do SO para comunicação interna do seu aplicativo atráves de Intents. Você pode afetar o sistema do Android e outras Aplicações, criando bugs ou lags. Por exemplo, sabe-se que se seu aplicativo usa Intents para comunicação interna entre seus pacotes, você pode incorrer atrasos na experiência do usuário se o aplicativo for aberto logo após a inicialização do sistema operacional.
+
+### Arquitetura de pacotes Java
+
+Arquitetura Java para Anroid pode ser grosseiramente aproximada em [Model-View-Controller](http://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller). Em Android, [Fragment e Activity são na verdade classes de controle](http://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller). Por outro lado, elas são explicitamente parte da interface de usuário, por consequência também são Views.
+
+Por essa razão é difícil classificar fragments (ou activities) como estritamente controllers or views. É melhor deixá-los ficar em seus próprio pacote `fragments`. Activities podem ficar no pacote de nível mais elevado, desde que você siga os conselhos da seção anterior. Se você está planejando ter mais do que 2 ou 3 activities, então também crie um pacote `activities`.
+
+Em contrapartida, a arquitetura pode parecer como um típico MVC, com um pacote `models` contendo POJOs para ser populado através de um JSON parser com API responses, e um pacote `views` contendo suas Views customizadas, notificações, action bar views, widgets etc. Adapters são uma matéria cinzenta vivendo entre dados e views. Entretanto eles geralmente precisam exportar alguma View via `getView()`, então você pode incluir os `adapters` como sub-pacote dentro de `views`.
+
+Alguns controladores são classe a nível da aplicação e fechadas para o sistema Android. Essas podem ficar em um pacote `managers`. Classes que processam dados mistos, como "DateUtils", ficam no pacote `utils`. Classes que são responsáveis por interagir com o backend ficam no pacote `network`.
+
+Tudo em tudo, partido do mais próximo do backend para o mais próximo do usuário:
+
+```
+com.futurice.project
+├─ network
+├─ models
+├─ managers
+├─ utils
+├─ fragments
+└─ views
+   ├─ adapters
+   ├─ actionbar
+   ├─ widgets
+   └─ notifications
+```

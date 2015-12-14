@@ -198,7 +198,7 @@ O Android Studio oferece suporte para lambdas do Java8. Se você é novo em lamb
 - Qualquer interface com apenas um método é _"lambda friendly"_ e pode ser envolvido dentro de uma sintaxe mais compacta
 - Se você está em dúvida sobre os parâmetros e como escrever uma simples sub-classe anônima, então deixe que o Android Studio envolva-a em um lambda para você.
 
-**Tenha cuidado com a limitação de métodos pelo dex e evite usar várias bibliotecas.** Aplicações Android quando empacotadas como um arquivo dex têm uma limitação de 65536 métodos a serem referenciados [[1]](https://medium.com/@rotxed/dex-skys-the-limit-no-65k-methods-is-28e6cb40cf71) [[2]](http://blog.persistent.info/2014/05/per-package-method-counts-for-androids.html) [[3]](http://jakewharton.com/play-services-is-a-monolith/). Você irá ver um erro fatal durante a compilação se você ultrapassar esse limite. Por essa razão, use uma mínima quantidade de bibliotecas e a ferramenta [dex-method-counts](https://github.com/mihaip/dex-method-counts) para determinar quais conjuntos de bibliotecas pode ser utilizadas a fim de permanecer abaixo do limite. Evite especialmente usar a biblioteca Guava, já que ela contém mais de 13 mil métodos.
+**Tenha cuidado com a limitação de métodos pelo dex e evite usar várias bibliotecas.** Aplicações Android quando empacotadas como um arquivo dex têm uma limitação de 65.536 métodos a serem referenciados [[1]](https://medium.com/@rotxed/dex-skys-the-limit-no-65k-methods-is-28e6cb40cf71) [[2]](http://blog.persistent.info/2014/05/per-package-method-counts-for-androids.html) [[3]](http://jakewharton.com/play-services-is-a-monolith/). Você irá ver um erro fatal durante a compilação se você ultrapassar esse limite. Por essa razão, use uma mínima quantidade de bibliotecas e a ferramenta [dex-method-counts](https://github.com/mihaip/dex-method-counts) para determinar quais conjuntos de bibliotecas pode ser utilizadas a fim de permanecer abaixo do limite. Evite especialmente usar a biblioteca Guava, já que ela contém mais de 13 mil métodos.
 
 ### Activities e Fragments
 
@@ -235,3 +235,49 @@ com.futurice.project
    ├─ widgets
    └─ notifications
 ```
+
+### Resources
+
+**Nomeando.** Siga a conveção de prefixar os tipos, assim `type_foo_bar.xml`. Exemplos: `fragment_contact_details.xml`, `activity_main.xml`.
+
+**Organizando layouts XMLs.** Se você não está certo em como formatar um layout XML, as seguintes convenções podem ajudar.
+
+- Um atributo por linha, indentado por 4 espaços
+- `android:id` como o primeiro atributo sempre
+- Atributos do tipo `android:layout_****` no começo
+- Atributo `style` no finally
+- Tag de fechamento `/>` tem uma linha própria, para facilitar ordenar e adicionar atributos.
+- Ao invés de colocar um texto diretamento no atributo `android:text`, considere utilizar [Atributos Designtime](http://tools.android.com/tips/layout-designtime-attributes) disponível para Android Studio.
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    >
+
+    <TextView
+        android:id="@+id/name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:text="@string/name"
+        style="@style/FancyText"
+        />
+
+    <include layout="@layout/reusable_part" />
+
+</LinearLayout>
+```
+
+Como um regra geral, atributos `android:layout_****` devem estar definidos no XML de layout, enquanto outros atributos `android:****` devem estar em um XML de estilo. Essa regra tem exceções, mas no geral funciona bem. A ideia é manter apenas atributos de layout (posicionamento, margem, tamanho) e atributos de conteúdo nos arquivos de layout, enquanto deixar todos os detalhes de aparência (cor, espaçamento interno, fonte) nos arquivos de estilo.
+
+Exceções são:
+
+- `android:id` deve obviamente ficar nos arquivos de layout
+- `android:orientation` de um `LinearLayout` normalmente faz mais sentido nos arquivos de layout
+- `android:text` deve estar nos arquivos de layout porque define conteúdo
+- As vezes fará sentido criar um estilo genérico definindo `android:layout_width` e `android:layout_height`, mas por padrão estes atributos devem ficar nos arquivos de layout
